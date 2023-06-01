@@ -8,7 +8,7 @@ import UIKit
 import AVFoundation
 import CoreVideo
 
-public protocol VideoCaptureDelegate: class {
+public protocol VideoCaptureDelegate: AnyObject {
     func videoCapture(_ capture: VideoCapture, didCaptureVideoFrame: CVPixelBuffer?, timestamp: CMTime)
 }
 
@@ -16,7 +16,6 @@ public class VideoCapture: NSObject {
     public var previewLayer: AVCaptureVideoPreviewLayer?
     public weak var delegate: VideoCaptureDelegate?
     public var fps = 15
-    
     let captureSession = AVCaptureSession()
     let videoOutput = AVCaptureVideoDataOutput()
     let queue = DispatchQueue(label: "com.university.SmartVision")
@@ -31,14 +30,12 @@ public class VideoCapture: NSObject {
     }
     
     func setUpCamera(sessionPreset: AVCaptureSession.Preset, completion: @escaping (_ success: Bool) -> Void) {
-        
         captureSession.beginConfiguration()
         captureSession.sessionPreset = sessionPreset
         
         guard let captureDevice = AVCaptureDevice.default(.builtInWideAngleCamera,
                                                           for: .video,
                                                           position: .back) else {
-            
             print("Error: no video devices available")
             return
         }
@@ -67,20 +64,17 @@ public class VideoCapture: NSObject {
         if captureSession.canAddOutput(videoOutput) {
             captureSession.addOutput(videoOutput)
         }
-        
-        // We want the buffers to be in portrait orientation otherwise they are
-        // rotated by 90 degrees. Need to set this _after_ addOutput()!
         videoOutput.connection(with: AVMediaType.video)?.videoOrientation = .portrait
-        
         captureSession.commitConfiguration()
-        
         let success = true
         completion(success)
     }
     
     public func start() {
         if !captureSession.isRunning {
-            captureSession.startRunning()
+            DispatchQueue.global().async { [weak self] in
+                self?.captureSession.startRunning()
+            }
         }
     }
     
@@ -93,9 +87,6 @@ public class VideoCapture: NSObject {
 
 extension VideoCapture: AVCaptureVideoDataOutputSampleBufferDelegate {
     public func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        // Because lowering the capture device's FPS looks ugly in the preview,
-        // we capture at full speed but only call the delegate at its desired
-        // framerate.
         let timestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
         let deltaTime = timestamp - lastTimestamp
         if deltaTime >= CMTimeMake(value: 1, timescale: Int32(fps)) {
@@ -103,10 +94,6 @@ extension VideoCapture: AVCaptureVideoDataOutputSampleBufferDelegate {
             let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer)
             delegate?.videoCapture(self, didCaptureVideoFrame: imageBuffer, timestamp: timestamp)
         }
-    }
-    
-    public func captureOutput(_ output: AVCaptureOutput, didDrop sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        //print("dropped frame")
     }
 }
 

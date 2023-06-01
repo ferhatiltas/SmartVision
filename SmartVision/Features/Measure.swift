@@ -6,79 +6,71 @@
 
 import UIKit
 
-protocol 📏Delegate {
+protocol MeasureDelegate {
     func updateMeasure(inferenceTime: Double, executionTime: Double, fps: Int)
 }
-// Performance Measurement
-class 📏 {
-    
-    var delegate: 📏Delegate?
-    
+
+class Measure {
+    var delegate: MeasureDelegate?
+
     var index: Int = -1
-    var measurements: [Dictionary<String, Double>]
-    
+    var measurements: [[String: Double]]
+
     init() {
         let measurement = [
             "start": CACurrentMediaTime(),
             "end": CACurrentMediaTime()
         ]
-        measurements = Array<Dictionary<String, Double>>(repeating: measurement, count: 30)
+        measurements = [[String: Double]](repeating: measurement, count: 30)
     }
-    
-    // start
-    func 🎬👏() {
+
+    func changeMeasureIndex() {
         index += 1
         index %= 30
         measurements[index] = [:]
-        
-        🏷(for: index, with: "start")
+
+        setMeasure(for: index, with: "start")
     }
-    
-    // stop
-    func 🎬🤚() {
-        🏷(for: index, with: "end")
-        
+
+    func calculateMeasure() {
+        setMeasure(for: index, with: "end")
+
         let beforeMeasurement = getBeforeMeasurment(for: index)
         let currentMeasurement = measurements[index]
         if let startTime = currentMeasurement["start"],
-            let endInferenceTime = currentMeasurement["endInference"],
-            let endTime = currentMeasurement["end"],
-            let beforeStartTime = beforeMeasurement["start"] {
+           let endInferenceTime = currentMeasurement["endInference"],
+           let endTime = currentMeasurement["end"],
+           let beforeStartTime = beforeMeasurement["start"]
+        {
             delegate?.updateMeasure(inferenceTime: endInferenceTime - startTime,
                                     executionTime: endTime - startTime,
-                                    fps: Int(1/(startTime - beforeStartTime)))
+                                    fps: Int(1 / (startTime - beforeStartTime)))
         }
-        
     }
-    
-    // labeling with
+
     func 🏷(with msg: String? = "") {
-        🏷(for: index, with: msg)
+        setMeasure(for: index, with: msg)
     }
-    
-    private func 🏷(for index: Int, with msg: String? = "") {
+
+    private func setMeasure(for index: Int, with msg: String? = "") {
         if let message = msg {
             measurements[index][message] = CACurrentMediaTime()
         }
     }
-    
-    private func getBeforeMeasurment(for index: Int) -> Dictionary<String, Double> {
+
+    private func getBeforeMeasurment(for index: Int) -> [String: Double] {
         return measurements[(index + 30 - 1) % 30]
     }
-    
-    // log
-    func 🖨() {
-        
-    }
+
+    func 🖨() {}
 }
 
 class MeasureLogView: UIView {
     let etimeLabel = UILabel(frame: .zero)
     let fpsLabel = UILabel(frame: .zero)
-    
-    
+
+    @available(*, unavailable)
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
 }

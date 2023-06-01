@@ -9,57 +9,31 @@ import Vision
 import CoreMedia
 
 class ViewController: UIViewController {
-
-    // MARK: - UI Properties
     @IBOutlet weak var videoPreview: UIView!
     @IBOutlet weak var boxesView: DrawingBoundingBoxView!
     @IBOutlet weak var labelsTableView: UITableView!
-    
     @IBOutlet weak var inferenceLabel: UILabel!
     @IBOutlet weak var etimeLabel: UILabel!
     @IBOutlet weak var fpsLabel: UILabel!
-    
-    // MARK - Core ML model
-    // YOLOv3(iOS12+), YOLOv3FP16(iOS12+), YOLOv3Int8LUT(iOS12+)
-    // YOLOv3Tiny(iOS12+), YOLOv3TinyFP16(iOS12+), YOLOv3TinyInt8LUT(iOS12+)
-    // MobileNetV2_SSDLite(iOS12+), ObjectDetector(iOS12+)
-    // yolov5n(iOS13+), yolov5s(iOS13+), yolov5m(iOS13+), yolov5l(iOS13+), yolov5x(iOS13+)
-    // yolov5n6(iOS13+), yolov5s6(iOS13+), yolov5m6(iOS13+), yolov5l6(iOS13+), yolov5x6(iOS13+)
-    // yolov8n(iOS14+), yolov8s(iOS14+), yolov8m(iOS14+), yolov8l(iOS14+), yolov8x(iOS14+)
     lazy var objectDectectionModel = { return try? yolov8s() }()
-    
-    // MARK: - Vision Properties
     var request: VNCoreMLRequest?
     var visionModel: VNCoreMLModel?
     var isInferencing = false
-    
-    // MARK: - AV Property
     var videoCapture: VideoCapture!
     let semaphore = DispatchSemaphore(value: 1)
     var lastExecution = Date()
-    
-    // MARK: - TableView Data
     var predictions: [VNRecognizedObjectObservation] = []
-    
-    // MARK - Performance Measurement Property
-    private let 👨‍🔧 = 📏()
+    private let measure = Measure()
     
     let maf1 = MovingAverageFilter()
     let maf2 = MovingAverageFilter()
     let maf3 = MovingAverageFilter()
-    
-    // MARK: - View Controller Life Cycle
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        // setup the model
         setUpModel()
-        
-        // setup camera
         setUpCamera()
-        
-        // setup delegate for performance measurement
-        👨‍🔧.delegate = self
+        measure.delegate = self
     }
     
     override func didReceiveMemoryWarning() {
@@ -75,8 +49,7 @@ class ViewController: UIViewController {
         super.viewWillDisappear(animated)
         self.videoCapture.stop()
     }
-    
-    // MARK: - Setup Core ML
+
     func setUpModel() {
         guard let objectDectectionModel = objectDectectionModel else { fatalError("fail to load the model") }
         if let visionModel = try? VNCoreMLModel(for: objectDectectionModel.model) {
@@ -88,21 +61,17 @@ class ViewController: UIViewController {
         }
     }
 
-    // MARK: - SetUp Video
     func setUpCamera() {
         videoCapture = VideoCapture()
         videoCapture.delegate = self
         videoCapture.fps = 30
         videoCapture.setUp(sessionPreset: .vga640x480) { success in
-            
             if success {
-                // add preview view on the layer
                 if let previewLayer = self.videoCapture.previewLayer {
                     self.videoPreview.layer.addSublayer(previewLayer)
                     self.resizePreviewLayer()
                 }
                 
-                // start video preview when setup is done
                 self.videoCapture.start()
             }
         }
@@ -118,17 +87,11 @@ class ViewController: UIViewController {
     }
 }
 
-// MARK: - VideoCaptureDelegate
 extension ViewController: VideoCaptureDelegate {
     func videoCapture(_ capture: VideoCapture, didCaptureVideoFrame pixelBuffer: CVPixelBuffer?, timestamp: CMTime) {
-        // the captured image from camera is contained on pixelBuffer
         if !self.isInferencing, let pixelBuffer = pixelBuffer {
             self.isInferencing = true
-            
-            // start of measure
-            self.👨‍🔧.🎬👏()
-            
-            // predict!
+            self.measure.changeMeasureIndex()
             self.predictUsingVision(pixelBuffer: pixelBuffer)
         }
     }
@@ -137,7 +100,6 @@ extension ViewController: VideoCaptureDelegate {
 extension ViewController {
     func predictUsingVision(pixelBuffer: CVPixelBuffer) {
         guard let request = request else { fatalError() }
-        // vision framework configures the input size of image following our model's input configuration automatically
         self.semaphore.wait()
         let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer)
         try? handler.perform([request])
@@ -145,25 +107,17 @@ extension ViewController {
     
     // MARK: - Post-processing
     func visionRequestDidComplete(request: VNRequest, error: Error?) {
-        self.👨‍🔧.🏷(with: "endInference")
+        self.measure.🏷(with: "endInference")
         if let predictions = request.results as? [VNRecognizedObjectObservation] {
-//            print(predictions.first?.labels.first?.identifier ?? "nil")
-//            print(predictions.first?.labels.first?.confidence ?? -1)
-            
             self.predictions = predictions
             DispatchQueue.main.async {
                 self.boxesView.predictedObjects = predictions
                 self.labelsTableView.reloadData()
-
-                // end of measure
-                self.👨‍🔧.🎬🤚()
-                
+                self.measure.calculateMeasure()
                 self.isInferencing = false
             }
         } else {
-            // end of measure
-            self.👨‍🔧.🎬🤚()
-            
+            self.measure.calculateMeasure()
             self.isInferencing = false
         }
         self.semaphore.signal()
@@ -190,10 +144,8 @@ extension ViewController: UITableViewDataSource {
     }
 }
 
-// MARK: - 📏(Performance Measurement) Delegate
-extension ViewController: 📏Delegate {
+extension ViewController: MeasureDelegate {
     func updateMeasure(inferenceTime: Double, executionTime: Double, fps: Int) {
-        //print(executionTime, fps)
         DispatchQueue.main.async {
             self.maf1.append(element: Int(inferenceTime*1000.0))
             self.maf2.append(element: Int(executionTime*1000.0))

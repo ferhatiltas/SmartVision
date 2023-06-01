@@ -65,17 +65,10 @@
 		6590EF7B2A29339F006F74BD /* SmartVision */ = {
 			isa = PBXGroup;
 			children = (
-				6590EFB92A293768006F74BD /* mlmodel */,
-				6590EFA92A293741006F74BD /* AppDelegate.swift */,
-				6590EFAA2A293741006F74BD /* DrawingBoundingBoxView.swift */,
-				6590EFAC2A293743006F74BD /* Main.storyboard */,
-				6590EFAB2A293742006F74BD /* ViewController.swift */,
-				6590EFB12A29374D006F74BD /* Measure.swift */,
-				6590EFB22A29374E006F74BD /* UIImage+CVPixelBuffer.swift */,
-				6590EFB32A29374E006F74BD /* VideoCapture.swift */,
-				6590EFBB2A293776006F74BD /* Assets.xcassets */,
+				65D95FF12A293A7A00A12E7D /* Resources */,
+				65D95FF02A293A6600A12E7D /* System */,
+				65D95FEF2A293A5500A12E7D /* Features */,
 				6590EFBA2A293775006F74BD /* Info.plist */,
-				6590EFBC2A293777006F74BD /* LaunchScreen.storyboard */,
 				6590EFC02A29380B006F74BD /* SmartVision-Bridging-Header.h */,
 			);
 			path = SmartVision;
@@ -87,6 +80,37 @@
 				6590EFB72A29375B006F74BD /* yolov8s.mlpackage */,
 			);
 			path = mlmodel;
+			sourceTree = "<group>";
+		};
+		65D95FEF2A293A5500A12E7D /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				6590EFB92A293768006F74BD /* mlmodel */,
+				6590EFAA2A293741006F74BD /* DrawingBoundingBoxView.swift */,
+				6590EFAC2A293743006F74BD /* Main.storyboard */,
+				6590EFAB2A293742006F74BD /* ViewController.swift */,
+				6590EFB12A29374D006F74BD /* Measure.swift */,
+				6590EFB22A29374E006F74BD /* UIImage+CVPixelBuffer.swift */,
+				6590EFBC2A293777006F74BD /* LaunchScreen.storyboard */,
+				6590EFB32A29374E006F74BD /* VideoCapture.swift */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		65D95FF02A293A6600A12E7D /* System */ = {
+			isa = PBXGroup;
+			children = (
+				6590EFA92A293741006F74BD /* AppDelegate.swift */,
+			);
+			path = System;
+			sourceTree = "<group>";
+		};
+		65D95FF12A293A7A00A12E7D /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				6590EFBB2A293776006F74BD /* Assets.xcassets */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
