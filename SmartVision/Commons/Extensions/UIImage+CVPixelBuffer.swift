@@ -14,20 +14,10 @@ extension UIImage {
         let valuesPointer =  UnsafeMutablePointer<UnsafeRawPointer?>.allocate(capacity: 1)
         keysPointer.initialize(to: keys)
         valuesPointer.initialize(to: values)
-        
-        let options = CFDictionaryCreate(kCFAllocatorDefault, keysPointer, valuesPointer, keys.count, nil, nil)
-        
         let width = cgimage!.width
         let height = cgimage!.height
-        
         var pxbuffer: CVPixelBuffer?
-        var status = CVPixelBufferCreate(kCFAllocatorDefault, width, height,
-                                         kCVPixelFormatType_32BGRA, options, &pxbuffer)
-        status = CVPixelBufferLockBaseAddress(pxbuffer!, CVPixelBufferLockFlags(rawValue: 0));
-        
         let bufferAddress = CVPixelBufferGetBaseAddress(pxbuffer!);
-        
-        
         let rgbColorSpace = CGColorSpaceCreateDeviceRGB();
         let bytesperrow = CVPixelBufferGetBytesPerRow(pxbuffer!)
         let context = CGContext(data: bufferAddress,
@@ -41,7 +31,6 @@ extension UIImage {
         context?.concatenate(__CGAffineTransformMake( 1, 0, 0, -1, 0, CGFloat(height) )) //Flip Vertical
         
         context?.draw(cgimage!, in: CGRect(x:0, y:0, width:CGFloat(width), height:CGFloat(height)));
-        status = CVPixelBufferUnlockBaseAddress(pxbuffer!, CVPixelBufferLockFlags(rawValue: 0));
         return pxbuffer!;
         
     }}
